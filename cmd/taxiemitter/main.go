@@ -58,9 +58,9 @@ func main() {
 
 	firstEvent := <-c
 
-	baseTime, err := time.Parse(timeFormat, firstEvent[3])
+	baseTime, err := time.Parse(timeFormat, firstEvent[0])
 	if err != nil {
-		log.Fatalf("Error parsing basetime %s: %v", firstEvent[3], err)
+		log.Fatalf("Error parsing basetime %s: %v", firstEvent[0], err)
 	}
 
 	// emit the first event now
@@ -79,9 +79,9 @@ func main() {
 					return
 				}
 
-				eventTime, err := time.Parse(timeFormat, record[3])
+				eventTime, err := time.Parse(timeFormat, record[0])
 				if err != nil {
-					log.Fatalf("Error parsing event time %s: %v", record[3], err)
+					log.Fatalf("Error parsing event time %s: %v", record[0], err)
 				}
 
 				realDiff := time.Since(startTime)

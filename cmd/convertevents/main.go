@@ -83,13 +83,13 @@ func main() {
 		records = append(records, &timedRecord{
 			ts: startTs,
 			r: []string{
-				"pickup", taxiName, licenseName, record[2], record[7], record[6], "", "",
+				record[2], "pickup", taxiName, licenseName, record[7], record[6], "", "", "", "",
 			},
 		})
 		records = append(records, &timedRecord{
 			ts: endTs,
 			r: []string{
-				"dropoff", taxiName, licenseName, record[3], record[9], record[8], record[16], record[14],
+				record[3], "dropoff", taxiName, licenseName, record[9], record[8], record[16], record[14], record[4], record[5],
 			},
 		})
 	}
