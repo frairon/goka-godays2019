@@ -26,6 +26,26 @@ type timedRecord struct {
 	r  []string
 }
 
+// Original data layout:
+
+// 00 medallion             an md5sum of the identifier of the taxi – vehicle bound
+// 01 hack_license          an md5sum of the identifier for the taxi license
+// 02 pickup_datetime       time when the passenger(s) were picked up
+// 03 dropoff_datetime      time when the passenger(s) were dropped off
+// 04 trip_time_in_secs     duration of the trip
+// 05 trip_distance         trip distance in miles
+// 06 pickup_longitude      longitude coordinate of the pickup location
+// 07 pickup_latitude       latitude coordinate of the pickup location
+// 08 dropoff_longitude     longitude coordinate of the drop-off location
+// 09 dropoff_latitude      latitude coordinate of the drop-off location
+// 10 payment_type          the payment method – credit card or cash
+// 11 fare_amount           fare amount in dollars
+// 12 surcharge             surcharge in dollars
+// 13 mta_tax               tax in dollars
+// 14 tip_amount            tip in dollars
+// 15 tolls_amount          bridge and tunnel tolls in dollars
+// 16 total_amount          total paid amount in dollars
+
 func main() {
 
 	pflag.Parse()
@@ -80,6 +100,10 @@ func main() {
 		}
 		licenseNames[record[1]] = licenseName
 
+		// pattern is
+		// time, type, taxi-id, license-id, lat, lon,
+		// for tripEnd additionally:
+		//
 		records = append(records, &timedRecord{
 			ts: startTs,
 			r: []string{
