@@ -19,10 +19,11 @@ var (
 )
 
 const (
-	processorGroup goka.Group = "taxi-state"
+	processorGroup goka.Group = "triptracker"
 )
 
-type TaxiTrips struct {
+// stores the current trip status of a taxi
+type taxiTrip struct {
 	TaxiID    string `json:"taxi_id"`
 	LicenseID string `json:"license_id"`
 
@@ -30,29 +31,27 @@ type TaxiTrips struct {
 	Ended   time.Time `json:"ended"`
 }
 
-type TaxiTripsCodec int
+type taxiTripsCodec int
 
-func (ts *TaxiTripsCodec) Encode(value interface{}) ([]byte, error) {
+func (ts *taxiTripsCodec) Encode(value interface{}) ([]byte, error) {
 	return json.Marshal(value)
 }
 
-func (ts *TaxiTripsCodec) Decode(data []byte) (interface{}, error) {
-	var taxiTrips TaxiTrips
+func (ts *taxiTripsCodec) Decode(data []byte) (interface{}, error) {
+	var taxiTrips taxiTrip
 	return &taxiTrips, json.Unmarshal(data, &taxiTrips)
 }
 
-type trips struct{}
-
-func (tr *trips) consumeTrips(ctx goka.Context, msg interface{}) {
+func trackTrips(ctx goka.Context, msg interface{}) {
 
 	var (
-		taxiTrips *TaxiTrips
+		taxiTrips *taxiTrip
 	)
 	t := ctx.Value()
 	if t != nil {
-		taxiTrips = t.(*TaxiTrips)
+		taxiTrips = t.(*taxiTrip)
 	} else {
-		taxiTrips = &TaxiTrips{
+		taxiTrips = &taxiTrip{
 			TaxiID: ctx.Key(),
 		}
 	}
@@ -75,13 +74,11 @@ func (tr *trips) consumeTrips(ctx goka.Context, msg interface{}) {
 func main() {
 	pflag.Parse()
 
-	trp := new(trips)
-
 	g := goka.DefineGroup(
 		processorGroup,
-		goka.Input(godays.TopicTripStarted, new(godays.TripStartedCodec), trp.consumeTrips),
-		goka.Input(godays.TopicTripEnded, new(godays.TripEndedCodec), trp.consumeTrips),
-		goka.Persist(new(TaxiTripsCodec)),
+		goka.Input(godays.TopicTripStarted, new(godays.TripStartedCodec), trackTrips),
+		goka.Input(godays.TopicTripEnded, new(godays.TripEndedCodec), trackTrips),
+		goka.Persist(new(taxiTripsCodec)),
 	)
 
 	proc, err := goka.NewProcessor(strings.Split(*brokers, ","), g)
@@ -89,7 +86,7 @@ func main() {
 		log.Fatalf("error creating trips processor: %v", err)
 	}
 
-	view, err := goka.NewView(strings.Split(*brokers, ","), goka.GroupTable(processorGroup), new(TaxiTripsCodec))
+	view, err := goka.NewView(strings.Split(*brokers, ","), goka.GroupTable(processorGroup), new(taxiTripsCodec))
 	if err != nil {
 		log.Fatalf("error creating trips view: %v", err)
 	}
@@ -102,7 +99,7 @@ func main() {
 				w.Write([]byte(fmt.Sprintf("%s -> not found\n", id)))
 				continue
 			}
-			trips := val.(*TaxiTrips)
+			trips := val.(*taxiTrip)
 			w.Write([]byte(fmt.Sprintf("%s -> busy: %t\n", id, !trips.Ended.IsZero())))
 		}
 	})
