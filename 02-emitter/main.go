@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	godays "github.com/frairon/goka-godays2019"
@@ -25,6 +26,8 @@ var (
 	input     = pflag.String("input", "testdata/taxidata.csv", "input events file")
 	timeLapse = pflag.Float64("time-lapse", 1.0, "increase or decrease time. >1.0 -> time runs faster")
 )
+
+var eventsSent int64
 
 func main() {
 	pflag.Parse()
@@ -77,8 +80,7 @@ func main() {
 		default:
 			log.Fatalf("unhandled event type: %v", event)
 		}
-
-		log.Printf("sending event: %#v", event)
+		atomic.AddInt64(&eventsSent, 1)
 	}
 
 	// emit the first event now
@@ -114,6 +116,9 @@ func main() {
 			}
 		}()
 	}
+
+	go printEventCounter()
+
 	wg.Wait()
 }
 
@@ -168,4 +173,13 @@ func mustParseFloat(strVal string) float64 {
 		log.Fatalf("Error parsing strVal %s: %v", strVal, err)
 	}
 	return floatVal
+}
+
+func printEventCounter() {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		<-ticker.C
+		log.Printf("sent %d events", atomic.LoadInt64(&eventsSent))
+	}
 }
