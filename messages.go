@@ -23,3 +23,10 @@ type TripEnded struct {
 	Charge float64 `json:"charge"`
 	Tip    float64 `json:"tip"`
 }
+
+type LicenseTracker struct {
+	Started time.Time       `json:"time_started"`
+	Ended   time.Time       `json:"time_ended"`
+	Taxis   map[string]bool `json:"taxis"`
+	Fraud   bool            `json:"fraud"`
+}

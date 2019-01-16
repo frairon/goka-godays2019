@@ -15,12 +15,6 @@ var (
 	brokers = pflag.String("brokers", "localhost:9092", "brokers")
 )
 
-const (
-	configureLicenseTopic goka.Stream = "configure-licenses"
-	badLicenseGroup       goka.Group  = "bad-licenses"
-	licenseDetector       goka.Group  = "license-detector"
-)
-
 func trackBadLicenses(ctx goka.Context, msg interface{}) {
 	log.Printf("bad license tracked: %s -> %s", ctx.Key(), msg)
 	ctx.SetValue(msg)
@@ -28,7 +22,7 @@ func trackBadLicenses(ctx goka.Context, msg interface{}) {
 
 func detectBadLicenses(ctx goka.Context, msg interface{}) {
 	started := msg.(*godays.TripStarted)
-	badLicense := ctx.Lookup(goka.GroupTable(badLicenseGroup), started.LicenseID)
+	badLicense := ctx.Lookup(goka.GroupTable(godays.BadLicenseGroup), started.LicenseID)
 	if badLicense != nil {
 		blocked := badLicense.(string)
 		if blocked == "blacklisted" {
@@ -42,8 +36,8 @@ func main() {
 
 	badLicenseProc, err := goka.NewProcessor(strings.Split(*brokers, ","),
 		goka.DefineGroup(
-			badLicenseGroup,
-			goka.Input(configureLicenseTopic, new(codec.String), trackBadLicenses),
+			godays.BadLicenseGroup,
+			goka.Input(godays.ConfigureLicenseTopic, new(codec.String), trackBadLicenses),
 			goka.Persist(new(codec.String)),
 		))
 	if err != nil {
@@ -51,9 +45,9 @@ func main() {
 	}
 
 	detector, err := goka.NewProcessor(strings.Split(*brokers, ","),
-		goka.DefineGroup(licenseDetector,
+		goka.DefineGroup(godays.LicenseDetectorGroup,
 			goka.Input(godays.TopicTripStarted, new(godays.TripStartedCodec), detectBadLicenses),
-			goka.Lookup(goka.GroupTable(badLicenseGroup), new(codec.String)),
+			goka.Lookup(goka.GroupTable(godays.BadLicenseGroup), new(codec.String)),
 		))
 	if err != nil {
 		log.Fatalf("error creating view: %v", err)
