@@ -30,3 +30,12 @@ type LicenseTracker struct {
 	Taxis   map[string]bool `json:"taxis"`
 	Fraud   bool            `json:"fraud"`
 }
+
+// TaxiTrip stores the current trip status of a taxi
+type TaxiTrip struct {
+	TaxiID    string `json:"taxi_id"`
+	LicenseID string `json:"license_id"`
+
+	Started time.Time `json:"started"`
+	Ended   time.Time `json:"ended"`
+}

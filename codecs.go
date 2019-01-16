@@ -34,3 +34,14 @@ func (ts *LicenseTrackerCodec) Decode(data []byte) (interface{}, error) {
 	var licenseTracker LicenseTracker
 	return &licenseTracker, json.Unmarshal(data, &licenseTracker)
 }
+
+type TaxiTripsCodec int
+
+func (ts *TaxiTripsCodec) Encode(value interface{}) ([]byte, error) {
+	return json.Marshal(value)
+}
+
+func (ts *TaxiTripsCodec) Decode(data []byte) (interface{}, error) {
+	var taxiTrips TaxiTrip
+	return &taxiTrips, json.Unmarshal(data, &taxiTrips)
+}

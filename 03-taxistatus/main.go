@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,40 +17,16 @@ var (
 	brokers = pflag.String("brokers", "localhost:9092", "brokers")
 )
 
-const (
-	processorGroup goka.Group = "triptracker"
-)
-
-// stores the current trip status of a taxi
-type taxiTrip struct {
-	TaxiID    string `json:"taxi_id"`
-	LicenseID string `json:"license_id"`
-
-	Started time.Time `json:"started"`
-	Ended   time.Time `json:"ended"`
-}
-
-type taxiTripsCodec int
-
-func (ts *taxiTripsCodec) Encode(value interface{}) ([]byte, error) {
-	return json.Marshal(value)
-}
-
-func (ts *taxiTripsCodec) Decode(data []byte) (interface{}, error) {
-	var taxiTrips taxiTrip
-	return &taxiTrips, json.Unmarshal(data, &taxiTrips)
-}
-
 func trackTrips(ctx goka.Context, msg interface{}) {
 
 	var (
-		taxiTrips *taxiTrip
+		taxiTrips *godays.TaxiTrip
 	)
 	t := ctx.Value()
 	if t != nil {
-		taxiTrips = t.(*taxiTrip)
+		taxiTrips = t.(*godays.TaxiTrip)
 	} else {
-		taxiTrips = &taxiTrip{
+		taxiTrips = &godays.TaxiTrip{
 			TaxiID: ctx.Key(),
 		}
 	}
@@ -75,10 +50,10 @@ func main() {
 	pflag.Parse()
 
 	g := goka.DefineGroup(
-		processorGroup,
+		godays.TripTrackerGroup,
 		goka.Input(godays.TopicTripStarted, new(godays.TripStartedCodec), trackTrips),
 		goka.Input(godays.TopicTripEnded, new(godays.TripEndedCodec), trackTrips),
-		goka.Persist(new(taxiTripsCodec)),
+		goka.Persist(new(godays.TaxiTripsCodec)),
 	)
 
 	proc, err := goka.NewProcessor(strings.Split(*brokers, ","), g)
@@ -86,7 +61,7 @@ func main() {
 		log.Fatalf("error creating trips processor: %v", err)
 	}
 
-	view, err := goka.NewView(strings.Split(*brokers, ","), goka.GroupTable(processorGroup), new(taxiTripsCodec))
+	view, err := goka.NewView(strings.Split(*brokers, ","), goka.GroupTable(godays.TripTrackerGroup), new(godays.TaxiTripsCodec))
 	if err != nil {
 		log.Fatalf("error creating trips view: %v", err)
 	}
@@ -99,7 +74,7 @@ func main() {
 				w.Write([]byte(fmt.Sprintf("%s -> not found\n", id)))
 				continue
 			}
-			trips := val.(*taxiTrip)
+			trips := val.(*godays.TaxiTrip)
 			w.Write([]byte(fmt.Sprintf("%s -> busy: %t\n", id, !trips.Ended.IsZero())))
 		}
 	})

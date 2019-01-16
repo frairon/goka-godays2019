@@ -1,0 +1,1 @@
+Fraud license auto detect
