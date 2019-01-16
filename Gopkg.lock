@@ -74,34 +74,11 @@
   revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
 
 [[projects]]
-  digest = "1:c79fb010be38a59d657c48c6ba1d003a8aa651fa56b579d959d74573b7dff8e1"
-  name = "github.com/gorilla/context"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
-  version = "v1.1.1"
-
-[[projects]]
-  digest = "1:e73f5b0152105f18bc131fba127d9949305c8693f8a762588a82a48f61756f5f"
-  name = "github.com/gorilla/mux"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "e3702bed27f0d39777b0b37b664b6280e8ef8fbf"
-  version = "v1.6.2"
-
-[[projects]]
-  digest = "1:7f831492f635cdda38026938e52cff2bd9e9d569708263685d6b1f80db04e006"
+  digest = "1:e281833b7c903968111381a054e41482b4a46d0ea1df63be6b7747491631d833"
   name = "github.com/lovoo/goka"
   packages = [
     ".",
     "codec",
-    "examples/3-messaging",
-    "examples/3-messaging/blocker",
-    "examples/3-messaging/collector",
-    "examples/3-messaging/detector",
-    "examples/3-messaging/filter",
-    "examples/3-messaging/service",
-    "examples/3-messaging/translator",
     "kafka",
     "logger",
     "multierr",
@@ -139,6 +116,14 @@
   revision = "c4fab1ac1bec58281ad0667dc3f0907a9476ac47"
 
 [[projects]]
+  digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
+  name = "github.com/spf13/pflag"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
+  version = "v1.0.3"
+
+[[projects]]
   branch = "master"
   digest = "1:685fdfea42d825ebd39ee0994354b46c374cf2c2b2d97a41a8dee1807c6a9b62"
   name = "github.com/syndtr/goleveldb"
@@ -171,17 +156,9 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/gorilla/mux",
     "github.com/lovoo/goka",
     "github.com/lovoo/goka/codec",
-    "github.com/lovoo/goka/examples/3-messaging",
-    "github.com/lovoo/goka/examples/3-messaging/blocker",
-    "github.com/lovoo/goka/examples/3-messaging/collector",
-    "github.com/lovoo/goka/examples/3-messaging/detector",
-    "github.com/lovoo/goka/examples/3-messaging/filter",
-    "github.com/lovoo/goka/examples/3-messaging/service",
-    "github.com/lovoo/goka/examples/3-messaging/translator",
-    "golang.org/x/sync/errgroup",
+    "github.com/spf13/pflag",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
