@@ -9,6 +9,7 @@ import (
 	"time"
 
 	godays "github.com/frairon/goka-godays2019"
+	"github.com/frairon/goka-godays2019/utils"
 	"github.com/lovoo/goka"
 	"github.com/spf13/pflag"
 )
@@ -56,12 +57,18 @@ func main() {
 		goka.Persist(new(godays.TaxiTripsCodec)),
 	)
 
-	proc, err := goka.NewProcessor(strings.Split(*brokers, ","), g)
+	proc, err := goka.NewProcessor(strings.Split(*brokers, ","), g,
+		utils.RandomStoragePath(),
+	)
 	if err != nil {
 		log.Fatalf("error creating trips processor: %v", err)
 	}
 
-	view, err := goka.NewView(strings.Split(*brokers, ","), goka.GroupTable(godays.TripTrackerGroup), new(godays.TaxiTripsCodec))
+	view, err := goka.NewView(strings.Split(*brokers, ","),
+		goka.GroupTable(godays.TripTrackerGroup),
+		new(godays.TaxiTripsCodec),
+		utils.RandomStorageViewPath(),
+	)
 	if err != nil {
 		log.Fatalf("error creating trips view: %v", err)
 	}

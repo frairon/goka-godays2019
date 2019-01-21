@@ -100,10 +100,6 @@ func main() {
 		}
 		licenseNames[record[1]] = licenseName
 
-		// pattern is
-		// time, type, taxi-id, license-id, lat, lon,
-		// for tripEnd additionally:
-		//
 		records = append(records, &timedRecord{
 			ts: startTs,
 			r: []string{

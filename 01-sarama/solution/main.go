@@ -1,5 +1,6 @@
 package main
 
+// TODO: implement with sarama-cluster
 import (
 	"encoding/json"
 	"log"

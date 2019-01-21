@@ -25,7 +25,7 @@ const (
 var (
 	brokers          = pflag.String("brokers", "localhost:9092", "brokers")
 	input            = pflag.String("input", "testdata/taxidata_tiny.csv", "input events file")
-	timeLapse        = pflag.Float64("time-lapse", 1.0, "increase or decrease time. >1.0 -> time runs faster")
+	timeLapse        = pflag.Float64("time-lapse", 120, "increase or decrease time. >1.0 -> time runs faster")
 	licenseFraudRate = pflag.Int("license-fraud-rate", 0.0, "Every nth license is a fraud license")
 )
 
