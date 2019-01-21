@@ -2,19 +2,18 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"sort"
 	"time"
-
-	"github.com/spf13/pflag"
 )
 
 var (
-	input  = pflag.String("input", "", "raw event data file")
-	output = pflag.String("output", "", "path to splitted output file")
+	input  = flag.String("input", "", "raw event data file")
+	output = flag.String("output", "", "path to splitted output file")
 )
 
 const (
@@ -48,7 +47,7 @@ type timedRecord struct {
 
 func main() {
 
-	pflag.Parse()
+	flag.Parse()
 	file, err := os.Open(*input)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)

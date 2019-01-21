@@ -11,11 +11,11 @@ import (
 	godays "github.com/frairon/goka-godays2019"
 	"github.com/frairon/goka-godays2019/utils"
 	"github.com/lovoo/goka"
-	"github.com/spf13/pflag"
+	""
 )
 
 var (
-	brokers = pflag.String("brokers", "localhost:9092", "brokers")
+	brokers = String("brokers", "localhost:9092", "brokers")
 )
 
 func trackTrips(ctx goka.Context, msg interface{}) {
@@ -48,7 +48,7 @@ func trackTrips(ctx goka.Context, msg interface{}) {
 }
 
 func main() {
-	pflag.Parse()
+	Parse()
 
 	g := goka.DefineGroup(
 		godays.TripTrackerGroup,

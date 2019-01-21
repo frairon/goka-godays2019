@@ -2,20 +2,20 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"log"
 	"strings"
 
 	"github.com/Shopify/sarama"
 	godays "github.com/frairon/goka-godays2019"
-	"github.com/spf13/pflag"
 )
 
 var (
-	brokers = pflag.String("brokers", "localhost:9092", "comma separated list of brokers")
+	brokers = flag.String("brokers", "localhost:9092", "comma separated list of brokers")
 )
 
 func main() {
-	pflag.Parse()
+	flag.Parse()
 	client, err := sarama.NewClient(strings.Split(*brokers, ","), sarama.NewConfig())
 	if err != nil {
 		log.Fatalf("Error creating sarama client: %v", err)

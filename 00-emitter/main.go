@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -14,7 +15,6 @@ import (
 
 	godays "github.com/frairon/goka-godays2019"
 	"github.com/lovoo/goka"
-	"github.com/spf13/pflag"
 )
 
 const (
@@ -23,10 +23,10 @@ const (
 )
 
 var (
-	brokers          = pflag.String("brokers", "localhost:9092", "brokers")
-	input            = pflag.String("input", "testdata/taxidata_tiny.csv", "input events file")
-	timeLapse        = pflag.Float64("time-lapse", 120, "increase or decrease time. >1.0 -> time runs faster")
-	licenseFraudRate = pflag.Int("license-fraud-rate", 0.0, "Every nth license is a fraud license")
+	brokers          = flag.String("brokers", "localhost:9092", "brokers")
+	input            = flag.String("input", "testdata/taxidata_tiny.csv", "input events file")
+	timeLapse        = flag.Float64("time-lapse", 120, "increase or decrease time. >1.0 -> time runs faster")
+	licenseFraudRate = flag.Int("license-fraud-rate", 0.0, "Every nth license is a fraud license")
 )
 
 var (
@@ -34,7 +34,7 @@ var (
 )
 
 func main() {
-	pflag.Parse()
+	flag.Parse()
 
 	f, err := os.Open(*input)
 	if err != nil {

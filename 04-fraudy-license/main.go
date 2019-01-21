@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"strings"
@@ -11,11 +12,10 @@ import (
 	godays "github.com/frairon/goka-godays2019"
 	"github.com/lovoo/goka"
 	"github.com/lovoo/goka/codec"
-	"github.com/spf13/pflag"
 )
 
 var (
-	brokers = pflag.String("brokers", "localhost:9092", "brokers")
+	brokers = flag.String("brokers", "localhost:9092", "brokers")
 )
 
 const (
@@ -41,7 +41,7 @@ func (ts *licenseActionCodec) Decode(data []byte) (interface{}, error) {
 }
 
 func main() {
-	pflag.Parse()
+	flag.Parse()
 	detector, err := goka.NewProcessor(strings.Split(*brokers, ","),
 		goka.DefineGroup(licenseTracker,
 			goka.Input(godays.TopicTripStarted, new(godays.TripStartedCodec), remapLicenses),

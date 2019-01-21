@@ -2,23 +2,23 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"log"
 	"os"
 	"strings"
 
 	"github.com/lovoo/goka"
 	"github.com/lovoo/goka/codec"
-	"github.com/spf13/pflag"
 )
 
 var (
-	brokers   = pflag.String("brokers", "localhost:9092", "brokers")
-	topic     = pflag.String("topic", "", "topic to send messages to")
-	separator = pflag.String("separator", " ", "String to separate key from value")
+	brokers   = flag.String("brokers", "localhost:9092", "brokers")
+	topic     = flag.String("topic", "", "topic to send messages to")
+	separator = flag.String("separator", " ", "String to separate key from value")
 )
 
 func main() {
-	pflag.Parse()
+	flag.Parse()
 
 	if *topic == "" {
 		log.Fatalf("topic must be set")

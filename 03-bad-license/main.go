@@ -2,17 +2,17 @@ package main
 
 import (
 	"context"
+	"flag"
 	"log"
 	"strings"
 
 	godays "github.com/frairon/goka-godays2019"
 	"github.com/lovoo/goka"
 	"github.com/lovoo/goka/codec"
-	"github.com/spf13/pflag"
 )
 
 var (
-	brokers = pflag.String("brokers", "localhost:9092", "brokers")
+	brokers = flag.String("brokers", "localhost:9092", "brokers")
 )
 
 func trackBadLicenses(ctx goka.Context, msg interface{}) {
@@ -32,7 +32,7 @@ func detectBadLicenses(ctx goka.Context, msg interface{}) {
 }
 
 func main() {
-	pflag.Parse()
+	flag.Parse()
 
 	badLicenseProc, err := goka.NewProcessor(strings.Split(*brokers, ","),
 		goka.DefineGroup(
