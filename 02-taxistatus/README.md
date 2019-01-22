@@ -5,7 +5,7 @@ Goal is to track a taxi's state and present that in a simple web interface.
 ## Tasks
 
 * define a processor
-  * add the input streams TopicTripStarted and TripStartedCodec (resp. for TripEnded)
+  * add the input streams TripStartedTopic and TripStartedCodec (resp. for TripEnded)
   * add persistence definition using TaxiStatusCodec
 * use the view to TripTrackerGroup
   * the view is already defined, just use it in the http getter

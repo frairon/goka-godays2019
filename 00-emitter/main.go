@@ -46,12 +46,12 @@ func main() {
 	c := make(chan []string, 1000)
 
 	// start the emitters
-	startEmitter, err := goka.NewEmitter(strings.Split(*brokers, ","), godays.TopicTripStarted, new(godays.TripStartedCodec))
+	startEmitter, err := goka.NewEmitter(strings.Split(*brokers, ","), godays.TripStartedTopic, new(godays.TripStartedCodec))
 	if err != nil {
 		log.Fatalf("error creating emitter: %v", err)
 	}
 	defer startEmitter.Finish()
-	endEmitter, err := goka.NewEmitter(strings.Split(*brokers, ","), godays.TopicTripEnded, new(godays.TripStartedCodec))
+	endEmitter, err := goka.NewEmitter(strings.Split(*brokers, ","), godays.TripEndedTopic, new(godays.TripStartedCodec))
 	if err != nil {
 		log.Fatalf("error creating emitter: %v", err)
 	}

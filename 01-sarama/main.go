@@ -27,7 +27,7 @@ func main() {
 		log.Fatalf("Error creating consumer: %v", err)
 	}
 	defer consumer.Close()
-	partitionConsumer, err := consumer.ConsumePartition(string(godays.TopicTripStarted), 0, sarama.OffsetNewest)
+	partitionConsumer, err := consumer.ConsumePartition(string(godays.TripStartedTopic), 0, sarama.OffsetNewest)
 	if err != nil {
 		log.Fatalf("Error creating partition consumer: %v", err)
 	}

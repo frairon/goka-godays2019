@@ -25,8 +25,8 @@ func main() {
 	g := goka.DefineGroup(
 		godays.TripTrackerGroup,
 		// input topics
-		goka.Input(godays.TopicTripStarted, new(godays.TripStartedCodec), consumeEvents),
-		goka.Input(godays.TopicTripEnded, new(godays.TripEndedCodec), consumeEvents),
+		goka.Input(godays.TripStartedTopic, new(godays.TripStartedCodec), consumeEvents),
+		goka.Input(godays.TripEndedTopic, new(godays.TripEndedCodec), consumeEvents),
 		// state codec
 		goka.Persist(new(godays.TaxiStatusCodec)),
 	)

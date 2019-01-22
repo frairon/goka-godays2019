@@ -26,8 +26,10 @@ func main() {
 
 			// <INSERT HERE>
 			// configure input and persist
-			// input stream is the godays.LicenseConfigTopic
-			// persist as the same
+			// input stream is the "configure-licenses"-topic
+			goka.Input(godays.LicenseConfigTopic, new(godays.LicenseConfigCodec), configureLicense),
+			// persist everything as a stream
+			goka.Persist(new(godays.LicenseConfigCodec)),
 		),
 		utils.RandomStoragePath(),
 	)
@@ -36,12 +38,13 @@ func main() {
 	}
 
 	detectorProc, err := goka.NewProcessor(strings.Split(*brokers, ","),
-		goka.DefineGroup(
-			godays.LicenseDetectorGroup,
+		goka.DefineGroup(godays.LicenseDetectorGroup,
 
 			// <INSERT HERE>
 			// consume from trip-started
 			// register lookup on the group table of processor 1
+			goka.Input(godays.TripStartedTopic, new(godays.TripStartedCodec), detectBadLicenses),
+			goka.Lookup(goka.GroupTable(godays.LicenseConfigGroup), new(godays.LicenseConfigCodec)),
 		),
 		utils.RandomStoragePath(),
 	)
@@ -49,7 +52,6 @@ func main() {
 		log.Fatalf("error creating view: %v", err)
 	}
 
-	// tip: start the processors using multierr
 	me, ctx := multierr.NewErrGroup(context.Background())
 	me.Go(func() error { return licenseConfProc.Run(ctx) })
 	me.Go(func() error { return detectorProc.Run(ctx) })
@@ -57,11 +59,20 @@ func main() {
 }
 
 func configureLicense(ctx goka.Context, msg interface{}) {
-	// <INSERT HERE>
-	// store the config in the table
+	// simply the message as state
+	log.Printf("setting license config: %#v", msg.(*godays.LicenseConfig))
+	ctx.SetValue(msg)
 }
 
 func detectBadLicenses(ctx goka.Context, msg interface{}) {
-	// <INSERT HERE>
-	// get the value from the lookup table and check if it's fraud.
+	// get the incoming message
+	started := msg.(*godays.TripStarted)
+
+	// lookup the license config and alert a fraud
+	if val := ctx.Lookup(goka.GroupTable(godays.LicenseConfigGroup), started.LicenseID); val != nil {
+		cfg := val.(*godays.LicenseConfig)
+		if cfg.Fraud {
+			log.Printf("Detected Taxi trip with blacklisted license: %#v", started)
+		}
+	}
 }

@@ -44,8 +44,8 @@ func main() {
 	flag.Parse()
 	detector, err := goka.NewProcessor(strings.Split(*brokers, ","),
 		goka.DefineGroup(licenseTracker,
-			goka.Input(godays.TopicTripStarted, new(godays.TripStartedCodec), remapLicenses),
-			goka.Input(godays.TopicTripEnded, new(godays.TripEndedCodec), remapLicenses),
+			goka.Input(godays.TripStartedTopic, new(godays.TripStartedCodec), remapLicenses),
+			goka.Input(godays.TripEndedTopic, new(godays.TripEndedCodec), remapLicenses),
 			goka.Loop(new(licenseActionCodec), trackLicenses),
 			goka.Output("configure-licenses", new(codec.String)),
 			goka.Persist(new(godays.LicenseTrackerCodec)),

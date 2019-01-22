@@ -39,10 +39,14 @@ type TaxiStatus struct {
 	PauseDuration time.Duration `json:"pause_duration"`
 }
 
-//
+// LicenseTracker tracks a licenses activity
 type LicenseTracker struct {
 	Started time.Time       `json:"time_started"`
 	Ended   time.Time       `json:"time_ended"`
 	Taxis   map[string]bool `json:"taxis"`
-	Fraud   bool            `json:"fraud"`
+}
+
+// LicenseConfig configures a license
+type LicenseConfig struct {
+	Fraud bool `json:"fraud"`
 }
