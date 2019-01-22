@@ -24,11 +24,7 @@ func main() {
 		goka.DefineGroup(
 			godays.LicenseConfigGroup,
 
-			// <INSERT HERE>
-			// configure input and persist
-			// input stream is the "configure-licenses"-topic
 			goka.Input(godays.LicenseConfigTopic, new(godays.LicenseConfigCodec), configureLicense),
-			// persist everything as a stream
 			goka.Persist(new(godays.LicenseConfigCodec)),
 		),
 		utils.RandomStoragePath(),
@@ -40,9 +36,6 @@ func main() {
 	detectorProc, err := goka.NewProcessor(strings.Split(*brokers, ","),
 		goka.DefineGroup(godays.LicenseDetectorGroup,
 
-			// <INSERT HERE>
-			// consume from trip-started
-			// register lookup on the group table of processor 1
 			goka.Input(godays.TripStartedTopic, new(godays.TripStartedCodec), detectBadLicenses),
 			goka.Lookup(goka.GroupTable(godays.LicenseConfigGroup), new(godays.LicenseConfigCodec)),
 		),
@@ -65,7 +58,7 @@ func configureLicense(ctx goka.Context, msg interface{}) {
 }
 
 func detectBadLicenses(ctx goka.Context, msg interface{}) {
-	// get the incoming message
+	// cast the incoming message, will not fail
 	started := msg.(*godays.TripStarted)
 
 	// lookup the license config and alert a fraud

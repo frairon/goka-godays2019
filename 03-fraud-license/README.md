@@ -1,4 +1,4 @@
-# Assignment _Bad Licenses_
+# Assignment _Fraud Licenses_
 
 Goal is to detect the usage of fraud taxi licenses and print some notification.
 In this assignment we will mark licenses as fraud manually using
@@ -17,7 +17,7 @@ a simple helper tool in `cmd/stringproducer` that allows us to send arbitrary st
 * make sure Kafka is running
 * make sure you have an events emitter running (see previous examples)
 
-* Run the processors with `go run 03-bad-license/main.go`
+* Run the processors with `go run 03-fraud-license/main.go`
 * Emit something to the configure topic manually `go run cmd/stringemitter/main.go --topic configure-licenses --key=license-5 --value='{"fraud":true}'`
 * If you write something invalid, your processor will die
   * Side task: tolerate an invalid message
