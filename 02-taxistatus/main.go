@@ -2,62 +2,35 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"flag"
 	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	godays "github.com/frairon/goka-godays2019"
 	"github.com/frairon/goka-godays2019/utils"
 	"github.com/lovoo/goka"
-	""
 )
 
 var (
-	brokers = String("brokers", "localhost:9092", "brokers")
+	brokers = flag.String("brokers", "localhost:9092", "brokers")
 )
 
-func trackTrips(ctx goka.Context, msg interface{}) {
-
-	var (
-		taxiTrips *godays.TaxiTrip
-	)
-	t := ctx.Value()
-	if t != nil {
-		taxiTrips = t.(*godays.TaxiTrip)
-	} else {
-		taxiTrips = &godays.TaxiTrip{
-			TaxiID: ctx.Key(),
-		}
-	}
-
-	switch ev := msg.(type) {
-	case *godays.TripStarted:
-		taxiTrips.LicenseID = ev.LicenseID
-		taxiTrips.Started = ev.Ts
-		taxiTrips.Ended = time.Time{}
-	case *godays.TripEnded:
-		taxiTrips.LicenseID = ev.LicenseID
-		taxiTrips.Ended = ev.Ts
-	default:
-		ctx.Fail(fmt.Errorf("invalid message type: %T", msg))
-	}
-
-	ctx.SetValue(taxiTrips)
-}
-
 func main() {
-	Parse()
+	flag.Parse()
 
+	// define our processor
 	g := goka.DefineGroup(
 		godays.TripTrackerGroup,
-		goka.Input(godays.TopicTripStarted, new(godays.TripStartedCodec), trackTrips),
-		goka.Input(godays.TopicTripEnded, new(godays.TripEndedCodec), trackTrips),
-		goka.Persist(new(godays.TaxiTripsCodec)),
+
+		// <INSERT HERE>
+		// input topics
+		// persist
 	)
 
+	// create the processor
 	proc, err := goka.NewProcessor(strings.Split(*brokers, ","), g,
+		// use random storage path to avoid clashes (just for this workshop)
 		utils.RandomStoragePath(),
 	)
 	if err != nil {
@@ -66,7 +39,7 @@ func main() {
 
 	view, err := goka.NewView(strings.Split(*brokers, ","),
 		goka.GroupTable(godays.TripTrackerGroup),
-		new(godays.TaxiTripsCodec),
+		new(godays.TaxiStatusCodec),
 		utils.RandomStorageViewPath(),
 	)
 	if err != nil {
@@ -76,17 +49,31 @@ func main() {
 	http.HandleFunc("/taxi", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		for _, id := range r.URL.Query()["id"] {
-			val, _ := view.Get(id)
-			if val == nil {
-				w.Write([]byte(fmt.Sprintf("%s -> not found\n", id)))
-				continue
-			}
-			trips := val.(*godays.TaxiTrip)
-			w.Write([]byte(fmt.Sprintf("%s -> busy: %t\n", id, !trips.Ended.IsZero())))
+			_ = id
+			// <INSERT HERE>
+			// get the state from the view
+			// print the information you want to see
 		}
 	})
 
 	go http.ListenAndServe(":8080", nil)
+
 	go view.Run(context.Background())
-	proc.Run(context.Background())
+
+	// <INSERT HERE>
+	_ = proc
+}
+
+func consumeEvents(ctx goka.Context, msg interface{}) {
+
+	// <INSERT HERE>
+
+	// (1) get the table value from context
+
+	// (2) create it if nil or cast it if non-nil
+
+	// (3) switch on the message types (remember we're getting TripStarted AND TripEnded in this callback)
+	// on either message, decide what you want to track to the TaxiStatus state
+
+	// (4) persist the state again
 }

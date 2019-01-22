@@ -25,7 +25,7 @@ const (
 var (
 	brokers          = flag.String("brokers", "localhost:9092", "brokers")
 	input            = flag.String("input", "testdata/taxidata_tiny.csv", "input events file")
-	timeLapse        = flag.Float64("time-lapse", 120, "increase or decrease time. >1.0 -> time runs faster")
+	timeLapse        = flag.Float64("time-lapse", 60, "increase or decrease time. >1.0 -> time runs faster")
 	licenseFraudRate = flag.Int("license-fraud-rate", 0.0, "Every nth license is a fraud license")
 )
 
@@ -45,10 +45,19 @@ func main() {
 
 	c := make(chan []string, 1000)
 
-	startEmitter, endEmitter := createEmitters()
+	// start the emitters
+	startEmitter, err := goka.NewEmitter(strings.Split(*brokers, ","), godays.TopicTripStarted, new(godays.TripStartedCodec))
+	if err != nil {
+		log.Fatalf("error creating emitter: %v", err)
+	}
 	defer startEmitter.Finish()
+	endEmitter, err := goka.NewEmitter(strings.Split(*brokers, ","), godays.TopicTripEnded, new(godays.TripStartedCodec))
+	if err != nil {
+		log.Fatalf("error creating emitter: %v", err)
+	}
 	defer endEmitter.Finish()
 
+	// read from csv input file and send events to channel
 	reader := csv.NewReader(f)
 	var timeRead time.Time
 	go func() {
@@ -187,18 +196,6 @@ func parseFromCsvRecord(baseEventTime time.Time, baseTime time.Time, record []st
 	}
 	log.Fatalf("Invalid record type: %#v", record)
 	return nil
-}
-
-func createEmitters() (*goka.Emitter, *goka.Emitter) {
-	startEmitter, err := goka.NewEmitter(strings.Split(*brokers, ","), godays.TopicTripStarted, new(godays.TripStartedCodec))
-	if err != nil {
-		log.Fatalf("error creating emitter: %v", err)
-	}
-	endEmitter, err := goka.NewEmitter(strings.Split(*brokers, ","), godays.TopicTripEnded, new(godays.TripStartedCodec))
-	if err != nil {
-		log.Fatalf("error creating emitter: %v", err)
-	}
-	return startEmitter, endEmitter
 }
 
 func mustParseFloat(strVal string) float64 {

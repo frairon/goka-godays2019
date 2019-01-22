@@ -8,19 +8,12 @@ import (
 	"github.com/lovoo/goka/storage"
 )
 
-const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-func randomName() string {
-	b := make([]byte, 5)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
-}
-
+// RandomStoragePath is a helper option that uses a random name for storage to avoid clashes
 func RandomStoragePath() goka.ProcessorOption {
-	return goka.WithStorageBuilder(storage.DefaultBuilder(fmt.Sprintf("/tmp/goka-%s", randomName())))
+	return goka.WithStorageBuilder(storage.DefaultBuilder(fmt.Sprintf("/tmp/goka-%x", rand.Int())))
 }
+
+// RandomStorageViewPath is a helper option that uses a random name for storage to avoid clashes
 func RandomStorageViewPath() goka.ViewOption {
-	return goka.WithViewStorageBuilder(storage.DefaultBuilder(fmt.Sprintf("/tmp/goka-%s", randomName())))
+	return goka.WithViewStorageBuilder(storage.DefaultBuilder(fmt.Sprintf("/tmp/goka-%x", rand.Int())))
 }

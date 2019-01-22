@@ -2,7 +2,7 @@
 
 restart-kafka:
 	# remove disk caches
-	-rm -r /tmp/goka
+	-rm -r /tmp/goka*
 	# stop old versions of the container
 	-docker stop kafka-cluster1
 	-docker rm kafka-cluster1
