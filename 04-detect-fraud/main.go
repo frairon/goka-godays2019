@@ -4,14 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	godays "github.com/frairon/goka-godays2019"
 	"github.com/lovoo/goka"
-	"github.com/lovoo/goka/codec"
 )
 
 var (
@@ -22,11 +20,22 @@ const (
 	licenseTracker goka.Group = "license-tracker"
 )
 
-// internal loop message, that's why not exported
+type actionType int
+
+const (
+	invalid actionType = iota
+	pickup
+	dropoff
+)
+
+// internal loop message, should only be used by this processor
 type licenseAction struct {
-	Ts     time.Time
-	Type   string
+	Ts time.Time
+
 	TaxiID string
+
+	// type of the event
+	Type actionType
 }
 
 type licenseActionCodec struct{}
@@ -44,11 +53,12 @@ func main() {
 	flag.Parse()
 	detector, err := goka.NewProcessor(strings.Split(*brokers, ","),
 		goka.DefineGroup(licenseTracker,
-			goka.Input(godays.TripStartedTopic, new(godays.TripStartedCodec), remapLicenses),
-			goka.Input(godays.TripEndedTopic, new(godays.TripEndedCodec), remapLicenses),
+			goka.Input(godays.TripStartedTopic, new(godays.TripStartedCodec), processTrips),
+			goka.Input(godays.TripEndedTopic, new(godays.TripEndedCodec), processTrips),
 			goka.Loop(new(licenseActionCodec), trackLicenses),
-			goka.Output("configure-licenses", new(codec.String)),
+			goka.Output(godays.LicenseConfigTopic, new(godays.LicenseConfigCodec)),
 			goka.Persist(new(godays.LicenseTrackerCodec)),
+			goka.Join(goka.GroupTable(godays.LicenseConfigGroup), new(godays.LicenseConfigCodec)),
 		))
 	if err != nil {
 		log.Fatalf("error creating view: %v", err)
@@ -57,19 +67,19 @@ func main() {
 	detector.Run(context.Background())
 }
 
-func remapLicenses(ctx goka.Context, msg interface{}) {
+func processTrips(ctx goka.Context, msg interface{}) {
 	switch ev := msg.(type) {
 	case *godays.TripStarted:
 		ctx.Loopback(ev.LicenseID, &licenseAction{
 			Ts:     ev.Ts,
 			TaxiID: ev.TaxiID,
-			Type:   "started",
+			Type:   pickup,
 		})
 	case *godays.TripEnded:
 		ctx.Loopback(ev.LicenseID, &licenseAction{
 			Ts:     ev.Ts,
 			TaxiID: ev.TaxiID,
-			Type:   "ended",
+			Type:   dropoff,
 		})
 	}
 }
@@ -85,22 +95,23 @@ func trackLicenses(ctx goka.Context, msg interface{}) {
 	if lt.Taxis == nil {
 		lt.Taxis = make(map[string]bool)
 	}
-	switch ev := msg.(type) {
-	case *licenseAction:
-		if ev.Type == "started" {
-			if !lt.Fraud && len(lt.Taxis) > 1 {
-				ctx.Emit("configure-licenses", ctx.Key(), "blacklisted")
-				lt.Fraud = true
+	loop := msg.(*licenseAction)
+	switch loop.Type {
+	case pickup:
+		if len(lt.Taxis) > 1 {
+			val := ctx.Join(goka.GroupTable(godays.LicenseConfigGroup))
+			if val == nil || !val.(*godays.LicenseConfig).Fraud {
+				ctx.Emit(godays.LicenseConfigTopic, ctx.Key(), &godays.LicenseConfig{Fraud: true})
 			}
-			lt.Started = ev.Ts
-			lt.Ended = time.Time{}
-			lt.Taxis[ev.TaxiID] = true
-		} else {
-			lt.Ended = ev.Ts
-			delete(lt.Taxis, ev.TaxiID)
 		}
+		lt.Started = loop.Ts
+		lt.Ended = time.Time{}
+		lt.Taxis[loop.TaxiID] = true
+	case dropoff:
+		lt.Ended = loop.Ts
+		delete(lt.Taxis, loop.TaxiID)
 	default:
-		ctx.Fail(fmt.Errorf("Expected licenseAction in loop, got %T", msg))
+		log.Printf("invalid loop action type: %#v", loop)
 	}
 
 	ctx.SetValue(lt)

@@ -53,7 +53,7 @@ func main() {
 
 func configureLicense(ctx goka.Context, msg interface{}) {
 	// simply the message as state
-	log.Printf("setting license config: %#v", msg.(*godays.LicenseConfig))
+	log.Printf("setting license config: %s %#v", ctx.Key(), msg.(*godays.LicenseConfig))
 	ctx.SetValue(msg)
 }
 
@@ -65,7 +65,7 @@ func detectBadLicenses(ctx goka.Context, msg interface{}) {
 	if val := ctx.Lookup(goka.GroupTable(godays.LicenseConfigGroup), started.LicenseID); val != nil {
 		cfg := val.(*godays.LicenseConfig)
 		if cfg.Fraud {
-			log.Printf("Detected Taxi trip with blacklisted license: %#v", started)
+			log.Printf("Detected Taxi trip with blacklisted license: %s, taxi: %s", started.LicenseID, started.TaxiID)
 		}
 	}
 }
