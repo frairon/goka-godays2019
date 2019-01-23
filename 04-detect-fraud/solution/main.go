@@ -68,18 +68,51 @@ func main() {
 }
 
 func processTrips(ctx goka.Context, msg interface{}) {
-	// <INSERT HERE>
-	// create a licenseAction loop message and do a loopback using
-	// the license-ID
+	switch ev := msg.(type) {
+	case *godays.TripStarted:
+		ctx.Loopback(ev.LicenseID, &licenseAction{
+			Ts:     ev.Ts,
+			TaxiID: ev.TaxiID,
+			Type:   pickup,
+		})
+	case *godays.TripEnded:
+		ctx.Loopback(ev.LicenseID, &licenseAction{
+			Ts:     ev.Ts,
+			TaxiID: ev.TaxiID,
+			Type:   dropoff,
+		})
+	}
 }
 
 func trackLicenses(ctx goka.Context, msg interface{}) {
-	// <INSERT HERE>
-	// (1) load the table-value and create it if it's not set.
-	// (2) depending on the licenseAction-Type, mark the currently active taxi
-	// (3) If there are multiple taxis active, Emit a LicenseConfig configuring Fraud to
-	//     to the LicenseConfig topic
-	// (4) to avoid sending the fraud multiple times, join with the LicenseConfigGroup-table
-	//     and check whether the license is already configured as fraud.
-	// (5) don't forget to save the table-value
+	var lt *godays.LicenseTracker
+	val := ctx.Value()
+	if val == nil {
+		lt = new(godays.LicenseTracker)
+	} else {
+		lt = val.(*godays.LicenseTracker)
+	}
+	if lt.Taxis == nil {
+		lt.Taxis = make(map[string]bool)
+	}
+	loop := msg.(*licenseAction)
+	switch loop.Type {
+	case pickup:
+		if len(lt.Taxis) > 1 {
+			val := ctx.Join(goka.GroupTable(godays.LicenseConfigGroup))
+			if val == nil || !val.(*godays.LicenseConfig).Fraud {
+				ctx.Emit(godays.LicenseConfigTopic, ctx.Key(), &godays.LicenseConfig{Fraud: true})
+			}
+		}
+		lt.Started = loop.Ts
+		lt.Ended = time.Time{}
+		lt.Taxis[loop.TaxiID] = true
+	case dropoff:
+		lt.Ended = loop.Ts
+		delete(lt.Taxis, loop.TaxiID)
+	default:
+		log.Printf("invalid loop action type: %#v", loop)
+	}
+
+	ctx.SetValue(lt)
 }

@@ -16,6 +16,8 @@ The processor is already defined, only the consume functions will need to be wri
   * use LicenseTracker as state type for the group table (as configured in the processor definition)
   * use licenseAction to track when one license is used in multiple taxis simultaneously
     In that case, notify the license-tracker via `godays.LicenseConfigTopic` to mark the license as fraud.
+  * to avoid sending multiple fraud-configurations, join with the LicenseConfigGroup-table and check, whether the license
+    is already marked as fraud.
 
 ## Run it
 
