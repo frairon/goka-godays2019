@@ -1,7 +1,7 @@
-# Assignment _Fraud Licenses_
+# _Fraud Licenses_
 
 Goal is to detect the usage of fraud taxi licenses and print some notification.
-In this assignment we will mark licenses as fraud manually using
+In this task we will mark licenses as fraud manually using
 a simple helper tool in `cmd/stringproducer` that allows us to send arbitrary string messages to a topic.
 
 ## Tasks

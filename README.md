@@ -1,19 +1,17 @@
-# Goka
-## Painless stream processing with Go and Kafka
+# Godays 2019 - Painless stream processing with Go and Kafka
 
 ## Agenda
-* Setup
-  * getting the dependencies
-  * starting kafka locally
-* Sarama Example
-* Goka concepts
-  * starting an emitter
-  * starting a producer
-  * starting a view
-  * some monitoring
-  * testing our code
+* Checkout the [data](https://github.com/frairon/goka-godays2019/blob/master/testdata/README.md)
+* Setup working environment
+* clone the repo
+* tasks
+  * Consume events using Sarama
+  * Track and view state of saxis
+  * alert on license fraud
+  * detect fraud
+  * cell based visualization
 
-# Set up your working environment
+## Set up your working environment
 
 * Golang https://golang.org/dl/
 * Docker/Git

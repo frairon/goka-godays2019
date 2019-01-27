@@ -1,6 +1,6 @@
-# Assignment _Fraud Detection_
+# _Fraud Detection_
 
-Goal of this assignment is to automatically detect fraud based on the usage of licenses.
+Goal of this task is to automatically detect fraud based on the usage of licenses.
 
 Build a processor that consumes trip-started and trip-ended events and sends a `licenseAction` event
 via loopback providing license-ID as a key.
@@ -22,6 +22,6 @@ The processor is already defined, only the consume functions will need to be wri
 ## Run it
 
 * `make restart-kafka`
-* run the previous assignment `go run 03-fraud-license/main.go` or `go run 03-fraud-license/solution/main.go`
+* run the previous task `go run 03-fraud-license/main.go` or `go run 03-fraud-license/solution/main.go`
 * run the fraud detector `go run 04-detect-fraud/main.go`
 * run the emitter, injecting some fraud: `go run 00-emitter/main.go --time-lapse=60 --input testdata/taxidata_complete.csv --license-fraud-rate=17`

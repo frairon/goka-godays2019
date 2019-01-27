@@ -1,4 +1,4 @@
-# Assignment _Taxi Status_
+# _Taxi Status_
 
 Goal is to track a taxi's state and present that in a simple web interface.
 
