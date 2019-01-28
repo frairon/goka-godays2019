@@ -69,7 +69,7 @@ func main() {
 
 func processTrips(ctx goka.Context, msg interface{}) {
 	// <INSERT HERE>
-	// create a licenseAction loop message and do a loopback using
+	// create a licenseAction message and do a loopback using
 	// the license-ID
 }
 

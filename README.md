@@ -5,11 +5,11 @@
 * Setup working environment
 * clone the repo
 * tasks
-  * Consume events using Sarama
-  * Track and view state of saxis
-  * alert on license fraud
-  * detect fraud
-  * cell based visualization
+  1. Consume events using Sarama
+  1. Track and view state of saxis
+  1. alert on license fraud
+  1. detect fraud
+  1. cell based visualization
 
 ## Set up your working environment
 

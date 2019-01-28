@@ -61,6 +61,7 @@ func main() {
 	go view.Run(context.Background())
 
 	// <INSERT HERE>
+	// start the processor (blocking)
 	_ = proc
 }
 
