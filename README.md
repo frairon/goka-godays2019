@@ -43,11 +43,6 @@ git clone https://github.com/frairon/goka-godays2019.git
 go get github.com/frairon/goka-godays2019
 ```
 
-* Start Kafka locally
-```bash
-make restart-kafka
-```
-
 * Get the workshop data
 ```bash
 # tiny data set is located in testdata/taxidata_tiny.csv
@@ -57,6 +52,11 @@ make get-100
 # [Optional]
 # full dataset (~320MB) can be downloaded from https://storage.googleapis.com/lv-goka-godays2019/taxidata_complete.csv
 make get-complete
+```
+
+* Start Kafka locally
+```bash
+make restart-kafka
 ```
 
 
