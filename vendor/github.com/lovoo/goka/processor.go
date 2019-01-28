@@ -32,10 +32,11 @@ type Processor struct {
 
 	consumer kafka.Consumer
 	producer kafka.Producer
+	asCh     chan kafka.Assignment
 
-	errg   *multierr.ErrGroup
 	errors *multierr.Errors
 	cancel func()
+	ctx    context.Context
 }
 
 // message to be consumed
@@ -74,7 +75,7 @@ func NewProcessor(brokers []string, gg *GroupGraph, options ...ProcessorOption) 
 	}
 
 	opts := new(poptions)
-	err := opts.applyOptions(string(gg.Group()), options...)
+	err := opts.applyOptions(gg, options...)
 	if err != nil {
 		return nil, fmt.Errorf(errApplyOptions, err)
 	}
@@ -113,6 +114,8 @@ func NewProcessor(brokers []string, gg *GroupGraph, options ...ProcessorOption) 
 		views:          views,
 
 		graph: gg,
+
+		asCh: make(chan kafka.Assignment, 1),
 	}
 
 	return processor, nil
@@ -273,7 +276,8 @@ func (g *Processor) Run(ctx context.Context) (rerr error) {
 
 	// create errorgroup
 	ctx, g.cancel = context.WithCancel(ctx)
-	g.errg, ctx = multierr.NewErrGroup(ctx)
+	errg, ctx := multierr.NewErrGroup(ctx)
+	g.ctx = ctx
 	defer g.cancel()
 
 	// collect all errors before leaving
@@ -284,14 +288,14 @@ func (g *Processor) Run(ctx context.Context) (rerr error) {
 	}()
 
 	// create kafka consumer
-	g.opts.log.Printf("Processor: creating consumer")
+	g.opts.log.Printf("Processor: creating consumer [%s]", g.graph.Group())
 	consumer, err := g.opts.builders.consumer(g.brokers, string(g.graph.Group()), g.opts.clientID)
 	if err != nil {
 		return fmt.Errorf(errBuildConsumer, err)
 	}
 	g.consumer = consumer
 	defer func() {
-		g.opts.log.Printf("Processor: closing consumer")
+		g.opts.log.Printf("Processor: closing consumer [%s]", g.graph.Group())
 		if err = g.consumer.Close(); err != nil {
 			_ = g.errors.Collect(fmt.Errorf("error closing consumer: %v", err))
 		}
@@ -314,7 +318,7 @@ func (g *Processor) Run(ctx context.Context) (rerr error) {
 	// start all views
 	for t, v := range g.views {
 		t, v := t, v
-		g.errg.Go(func() error {
+		errg.Go(func() error {
 			if err := v.Run(ctx); err != nil {
 				return fmt.Errorf("error starting lookup table %s: %v", t, err)
 			}
@@ -333,15 +337,18 @@ func (g *Processor) Run(ctx context.Context) (rerr error) {
 	}
 	if err := g.consumer.Subscribe(topics); err != nil {
 		g.cancel()
-		_ = g.errors.Merge(g.errg.Wait())
+		_ = g.errors.Merge(errg.Wait())
 		return fmt.Errorf("error subscribing topics: %v", err)
 	}
 
 	// start processor dispatcher
-	g.errg.Go(func() error { return g.run(ctx) })
+	errg.Go(func() error {
+		g.asCh <- kafka.Assignment{}
+		return g.waitAssignment(ctx)
+	})
 
 	// wait for goroutines to return
-	_ = g.errors.Merge(g.errg.Wait())
+	_ = g.errors.Merge(errg.Wait())
 
 	// remove all partitions first
 	g.opts.log.Printf("Processor: removing partitions")
@@ -380,18 +387,58 @@ func (g *Processor) pushToPartitionView(ctx context.Context, topic string, part 
 	return nil
 }
 
-func (g *Processor) run(ctx context.Context) error {
-	g.opts.log.Printf("Processor: started")
-	defer g.opts.log.Printf("Processor: stopped")
+func (g *Processor) waitAssignment(ctx context.Context) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case a := <-g.asCh:
+			if err := g.runAssignment(ctx, a); err != nil {
+				return err
+			}
+		}
+	}
+}
+
+func (g *Processor) runAssignment(ctx context.Context, a kafka.Assignment) error {
+	errs := new(multierr.Errors)
+	ctx, cancel := context.WithCancel(ctx)
+	errg, ctx := multierr.NewErrGroup(ctx)
+	defer cancel()
+
+	// create partitions based on assignmend
+	if err := g.rebalance(errg, ctx, a); err.HasErrors() {
+		return errs.Collect(err).NilOrError()
+	}
+
+	// start dispatcher
+	errg.Go(func() error {
+		err := g.dispatcher(ctx)
+		// cancel context even if dispatcher returned nil -- can only be a rebalance
+		cancel()
+		return err
+	})
+
+	// wait until dispatcher or partitions have returned
+	_ = errs.Merge(errg.Wait())
+
+	// all partitions should have returned at this point, so clean up
+	_ = errs.Merge(g.removePartitions())
+
+	return errs.NilOrError()
+}
+
+func (g *Processor) dispatcher(ctx context.Context) error {
+	g.opts.log.Printf("Processor: dispatcher started")
+	defer g.opts.log.Printf("Processor: dispatcher stopped")
 
 	for {
 		select {
 		case ev := <-g.consumer.Events():
 			switch ev := ev.(type) {
 			case *kafka.Assignment:
-				if err := g.rebalance(ctx, *ev); err != nil {
-					return fmt.Errorf("error on rebalance: %v", err)
-				}
+				g.asCh <- *ev
+				return nil
 
 			case *kafka.Message:
 				var err error
@@ -487,7 +534,7 @@ func (g *Processor) newStorage(topic string, id int32, update UpdateCallback) (*
 	}, nil
 }
 
-func (g *Processor) createPartitionViews(ctx context.Context, id int32) error {
+func (g *Processor) createPartitionViews(errg *multierr.ErrGroup, ctx context.Context, id int32) error {
 	g.m.Lock()
 	defer g.m.Unlock()
 
@@ -511,7 +558,7 @@ func (g *Processor) createPartitionViews(ctx context.Context, id int32) error {
 		)
 		g.partitionViews[id][t.Topic()] = p
 
-		g.errg.Go(func() (err error) {
+		errg.Go(func() (err error) {
 			defer func() {
 				if rerr := recover(); rerr != nil {
 					g.opts.log.Printf("partition view %s/%d: panic", p.topic, id)
@@ -533,7 +580,7 @@ func (g *Processor) createPartitionViews(ctx context.Context, id int32) error {
 	return nil
 }
 
-func (g *Processor) createPartition(ctx context.Context, id int32) error {
+func (g *Processor) createPartition(errg *multierr.ErrGroup, ctx context.Context, id int32) error {
 	if _, has := g.partitions[id]; has {
 		return nil
 	}
@@ -565,7 +612,7 @@ func (g *Processor) createPartition(ctx context.Context, id int32) error {
 		g.opts.partitionChannelSize,
 	)
 	par := g.partitions[id]
-	g.errg.Go(func() (err error) {
+	errg.Go(func() (err error) {
 		defer func() {
 			if rerr := recover(); rerr != nil {
 				g.opts.log.Printf("partition %s/%d: panic", par.topic, id)
@@ -586,27 +633,29 @@ func (g *Processor) createPartition(ctx context.Context, id int32) error {
 	return nil
 }
 
-func (g *Processor) rebalance(ctx context.Context, partitions kafka.Assignment) error {
+func (g *Processor) rebalance(errg *multierr.ErrGroup, ctx context.Context, partitions kafka.Assignment) *multierr.Errors {
 	errs := new(multierr.Errors)
 	g.opts.log.Printf("Processor: rebalancing: %+v", partitions)
 
 	for id := range partitions {
 		// create partition views
-		if err := g.createPartitionViews(ctx, id); err != nil {
-			return errs.Collect(err).NilOrError()
+		if err := g.createPartitionViews(errg, ctx, id); err != nil {
+			errs.Collect(err)
 		}
 		// create partition processor
-		if err := g.createPartition(ctx, id); err != nil {
-			return errs.Collect(err).NilOrError()
+		if err := g.createPartition(errg, ctx, id); err != nil {
+			errs.Collect(err)
 		}
 	}
+	return errs
+}
 
+func (g *Processor) removePartitions() *multierr.Errors {
+	errs := new(multierr.Errors)
 	for partition := range g.partitions {
-		if _, has := partitions[partition]; !has {
-			_ = errs.Merge(g.removePartition(partition))
-		}
+		_ = errs.Merge(g.removePartition(partition))
 	}
-	return errs.NilOrError()
+	return errs
 }
 
 func (g *Processor) removePartition(partition int32) *multierr.Errors {
@@ -645,6 +694,7 @@ func (g *Processor) process(msg *message, st storage.Storage, wg *sync.WaitGroup
 	g.m.RUnlock()
 
 	ctx := &cbContext{
+		ctx:   g.ctx,
 		graph: g.graph,
 
 		pstats: pstats,
@@ -652,7 +702,15 @@ func (g *Processor) process(msg *message, st storage.Storage, wg *sync.WaitGroup
 		views:  g.views,
 		wg:     wg,
 		msg:    msg,
-		failer: g.fail,
+		failer: func(err error) {
+			// only fail processor if context not already Done
+			select {
+			case <-g.ctx.Done():
+				return
+			default:
+			}
+			g.fail(err)
+		},
 		emitter: func(topic string, key string, value []byte) *kafka.Promise {
 			return g.producer.Emit(topic, key, value).Then(func(err error) {
 				if err != nil {

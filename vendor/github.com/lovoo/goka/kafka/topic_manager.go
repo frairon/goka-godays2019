@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	kazoo "github.com/db7/kazoo-go"
+	kazoo "github.com/wvanbergen/kazoo-go"
 )
 
 // TopicManager provides an interface to create/check topics and their partitions
@@ -16,6 +16,9 @@ type TopicManager interface {
 	EnsureTableExists(topic string, npar int) error
 	// EnsureStreamExists checks that a stream topic exists, or create one if possible
 	EnsureStreamExists(topic string, npar int) error
+	// EnsureTopicExists checks that a topic exists, or create one if possible,
+	// enforcing the given configuration
+	EnsureTopicExists(topic string, npar, rfactor int, config map[string]string) error
 
 	// Partitions returns the number of partitions of a topic, that are assigned to the running
 	// instance, i.e. it doesn't represent all partitions of a topic.
@@ -64,6 +67,10 @@ func (m *saramaTopicManager) EnsureTableExists(topic string, npar int) error {
 		return fmt.Errorf("topic %s has %d partitions instead of %d", topic, len(par), npar)
 	}
 	return nil
+}
+
+func (m *saramaTopicManager) EnsureTopicExists(topic string, npar, rfactor int, config map[string]string) error {
+	return fmt.Errorf("not implemented in SaramaTopicManager")
 }
 
 // TopicManagerConfig contains the configuration to access the Zookeeper servers
@@ -128,6 +135,7 @@ func (m *topicManager) EnsureTableExists(topic string, npar int) error {
 		m.zk, topic, npar,
 		m.config.Table.Replication,
 		map[string]string{"cleanup.policy": "compact"},
+		false,
 	)
 	if err != nil {
 		return err
@@ -142,8 +150,16 @@ func (m *topicManager) EnsureStreamExists(topic string, npar int) error {
 		m.zk, topic, npar,
 		m.config.Stream.Replication,
 		map[string]string{"retention.ms": strconv.Itoa(retention)},
+		false,
 	)
 	if err != nil {
+		return err
+	}
+	return m.checkPartitions(topic, npar)
+}
+
+func (m *topicManager) EnsureTopicExists(topic string, npar, rfactor int, config map[string]string) error {
+	if err := checkTopic(m.zk, topic, npar, rfactor, config, true); err != nil {
 		return err
 	}
 	return m.checkPartitions(topic, npar)
@@ -171,19 +187,30 @@ func (m *topicManager) Partitions(topic string) ([]int32, error) {
 }
 
 // ensure topic exists
-func checkTopic(kz kzoo, topic string, npar int, rfactor int, cfg map[string]string) error {
+func checkTopic(kz kzoo, topic string, npar int, rfactor int, cfg map[string]string, ensureConfig bool) error {
 	ok, err := hasTopic(kz, topic)
 	if err != nil {
 		return err
 	}
-	if ok {
+	if !ok {
+		err = kz.CreateTopic(topic, npar, rfactor, cfg)
+		if err != nil {
+			return err
+		}
+	}
+	if !ensureConfig {
 		return nil
 	}
-	err = kz.CreateTopic(topic, npar, rfactor, cfg)
+	// topic exists, check if config the same
+	c, err := kz.Topic(topic).Config()
 	if err != nil {
 		return err
 	}
-
+	for k, v := range cfg {
+		if c[k] != v {
+			return fmt.Errorf("expected %s=%s, but found %s", k, cfg[k], c[k])
+		}
+	}
 	return nil
 }
 
@@ -231,6 +258,9 @@ func checkPartitions(client sarama.Client, topic string, npar int) error {
 func updateChroot(servers []string) (servs []string, chroot string, err error) {
 	// find chroot in server addresses
 	for _, server := range servers {
+		for strings.HasSuffix(server, "/") {
+			server = server[:len(server)-1]
+		}
 		splt := strings.Split(server, "/")
 		if len(splt) == 1 {
 			// no chroot in address

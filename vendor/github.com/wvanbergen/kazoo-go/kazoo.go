@@ -55,11 +55,17 @@ type Config struct {
 	// The amount of time the Zookeeper client can be disconnected from the Zookeeper cluster
 	// before the cluster will get rid of watches and ephemeral nodes. Defaults to 1 second.
 	Timeout time.Duration
+
+	// Logger
+	Logger zk.Logger
 }
 
 // NewConfig instantiates a new Config struct with sane defaults.
 func NewConfig() *Config {
-	return &Config{Timeout: 1 * time.Second}
+	return &Config{
+		Timeout: 1 * time.Second,
+		Logger:  zk.DefaultLogger,
+	}
 }
 
 // NewKazoo creates a new connection instance
@@ -68,7 +74,12 @@ func NewKazoo(servers []string, conf *Config) (*Kazoo, error) {
 		conf = NewConfig()
 	}
 
-	conn, _, err := zk.Connect(servers, conf.Timeout)
+	conn, _, err := zk.Connect(
+		servers,
+		conf.Timeout,
+		func(c *zk.Conn) { c.SetLogger(conf.Logger) },
+	)
+
 	if err != nil {
 		return nil, err
 	}
@@ -221,10 +232,16 @@ func (kz *Kazoo) mkdirRecursive(node string) (err error) {
 		}
 	}
 
-	_, err = kz.conn.Create(node, nil, 0, zk.WorldACL(zk.PermAll))
-	if err == zk.ErrNodeExists {
-		err = nil
+	exists, _, err := kz.conn.Exists(node)
+	if err != nil {
+		return
 	}
+
+	if !exists {
+		_, err = kz.conn.Create(node, nil, 0, zk.WorldACL(zk.PermAll))
+		return
+	}
+
 	return
 }
 

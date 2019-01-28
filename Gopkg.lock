@@ -34,14 +34,6 @@
   version = "v1.1.1"
 
 [[projects]]
-  branch = "master"
-  digest = "1:d8ebefacb74bce829cbf5eeb8e0c9f96f2112f0385b886d6f20e81beff3f37f9"
-  name = "github.com/db7/kazoo-go"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ef4f7dc0b6f69bb0478d216f3491fa2508de2940"
-
-[[projects]]
   digest = "1:1f0c7ab489b407a7f8f9ad16c25a504d28ab461517a971d341388a56156c1bd7"
   name = "github.com/eapache/go-resiliency"
   packages = ["breaker"]
@@ -74,7 +66,8 @@
   revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
 
 [[projects]]
-  digest = "1:e281833b7c903968111381a054e41482b4a46d0ea1df63be6b7747491631d833"
+  branch = "master"
+  digest = "1:c4b41cdd0c1044136386129548fc60cda2a8bcb7e10943f82f2aebbad6682dab"
   name = "github.com/lovoo/goka"
   packages = [
     ".",
@@ -83,10 +76,10 @@
     "logger",
     "multierr",
     "storage",
+    "tester",
   ]
   pruneopts = "UT"
-  revision = "4ff4aeaf8b5b303e11d12f200d58ca9d3cc98e56"
-  version = "v0.1.0"
+  revision = "f8854f8742994d9ba8f0c2220c503fc69de7779d"
 
 [[projects]]
   digest = "1:e39a5ee8fcbec487f8fc68863ef95f2b025e0739b0e4aa55558a2b4cf8f0ecf0"
@@ -138,6 +131,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:dbc1b70d7841d3dded4615acd5a369945d784c092209c6ed4eddc1839fb2e301"
+  name = "github.com/wvanbergen/kazoo-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f72d8611297a7cf105da904c04198ad701a60101"
+
+[[projects]]
+  branch = "master"
   digest = "1:b521f10a2d8fa85c04a8ef4e62f2d1e14d303599a55d64dabf9f5a02f84d35eb"
   name = "golang.org/x/sync"
   packages = ["errgroup"]
@@ -149,9 +150,12 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Shopify/sarama",
+    "github.com/bsm/sarama-cluster",
     "github.com/lovoo/goka",
     "github.com/lovoo/goka/codec",
+    "github.com/lovoo/goka/multierr",
     "github.com/lovoo/goka/storage",
+    "github.com/lovoo/goka/tester",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
