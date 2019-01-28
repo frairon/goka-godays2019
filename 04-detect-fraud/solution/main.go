@@ -98,15 +98,15 @@ func trackLicenses(ctx goka.Context, msg interface{}) {
 	loop := msg.(*licenseAction)
 	switch loop.Type {
 	case pickup:
+		lt.Started = loop.Ts
+		lt.Ended = time.Time{}
+		lt.Taxis[loop.TaxiID] = true
 		if len(lt.Taxis) > 1 {
 			val := ctx.Join(goka.GroupTable(godays.LicenseConfigGroup))
 			if val == nil || !val.(*godays.LicenseConfig).Fraud {
 				ctx.Emit(godays.LicenseConfigTopic, ctx.Key(), &godays.LicenseConfig{Fraud: true})
 			}
 		}
-		lt.Started = loop.Ts
-		lt.Ended = time.Time{}
-		lt.Taxis[loop.TaxiID] = true
 	case dropoff:
 		lt.Ended = loop.Ts
 		delete(lt.Taxis, loop.TaxiID)
