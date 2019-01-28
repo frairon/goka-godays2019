@@ -37,6 +37,9 @@ export GOPATH=$HOME/gocode
 * Get the Workshop Code
 ```bash
 # need to have $GOPATH set
+mkdir -p $GOPATH/src/github.com/frairon/goka-godays2019
+git clone https://github.com/frairon/goka-godays2019.git
+# OR
 go get github.com/frairon/goka-godays2019
 ```
 
