@@ -23,7 +23,10 @@
 #   non-go = false
 #   go-tests = true
 #   unused-packages = true
-required = ["github.com/lovoo/goka/tester"]
+required = [
+  "github.com/lovoo/goka/tester",
+  "github.com/facebookgo/ensure"
+]
 
 [[constraint]]
   name = "github.com/gorilla/mux"

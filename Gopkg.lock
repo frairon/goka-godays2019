@@ -59,6 +59,30 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:877f8eb23c79e9eca3a2adc79de8910a52e238cb97e9c5dd59feb628b44740cb"
+  name = "github.com/facebookgo/ensure"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b4ab57deab51ee655ae4bd85281f0715a068016d"
+
+[[projects]]
+  branch = "master"
+  digest = "1:9a023ac8c30a6871d3fc94c9c0b5a0639ede096c351fd6cdcd7268fe9cb95af2"
+  name = "github.com/facebookgo/stack"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "751773369052141c013c6e827a71e8f35c07879c"
+
+[[projects]]
+  branch = "master"
+  digest = "1:7e1fe99c25eff4d1e0c68aaeeb8e7d85e3b1b4223a9bb0291beb2d1187c6842f"
+  name = "github.com/facebookgo/subset"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "8dac2c3c48703541e481feddf22975953d4ff842"
+
+[[projects]]
+  branch = "master"
   digest = "1:4a0c6bb4805508a6287675fac876be2ac1182539ca8a32468d8128882e9d5009"
   name = "github.com/golang/snappy"
   packages = ["."]
@@ -151,6 +175,7 @@
   input-imports = [
     "github.com/Shopify/sarama",
     "github.com/bsm/sarama-cluster",
+    "github.com/facebookgo/ensure",
     "github.com/lovoo/goka",
     "github.com/lovoo/goka/codec",
     "github.com/lovoo/goka/multierr",
