@@ -90,8 +90,16 @@
   revision = "2e65f85255dbc3072edf28d6b5b8efc472979f5a"
 
 [[projects]]
-  branch = "master"
-  digest = "1:c4b41cdd0c1044136386129548fc60cda2a8bcb7e10943f82f2aebbad6682dab"
+  digest = "1:ca59b1175189b3f0e9f1793d2c350114be36eaabbe5b9f554b35edee1de50aea"
+  name = "github.com/gorilla/mux"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a7962380ca08b5a188038c69871b8d3fbdf31e89"
+  version = "v1.7.0"
+
+[[projects]]
+  branch = "bindata-fixed"
+  digest = "1:46de789070238bc575470994dfcb4bc95a7625eb63adf8f4681399fd41b90f57"
   name = "github.com/lovoo/goka"
   packages = [
     ".",
@@ -101,9 +109,13 @@
     "multierr",
     "storage",
     "tester",
+    "web/index",
+    "web/monitor",
+    "web/query",
+    "web/templates",
   ]
   pruneopts = "UT"
-  revision = "f8854f8742994d9ba8f0c2220c503fc69de7779d"
+  revision = "1f635d2b43f1c616e123de9841716daed6313365"
 
 [[projects]]
   digest = "1:e39a5ee8fcbec487f8fc68863ef95f2b025e0739b0e4aa55558a2b4cf8f0ecf0"
@@ -176,11 +188,15 @@
     "github.com/Shopify/sarama",
     "github.com/bsm/sarama-cluster",
     "github.com/facebookgo/ensure",
+    "github.com/gorilla/mux",
     "github.com/lovoo/goka",
     "github.com/lovoo/goka/codec",
     "github.com/lovoo/goka/multierr",
     "github.com/lovoo/goka/storage",
     "github.com/lovoo/goka/tester",
+    "github.com/lovoo/goka/web/index",
+    "github.com/lovoo/goka/web/monitor",
+    "github.com/lovoo/goka/web/query",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

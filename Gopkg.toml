@@ -33,12 +33,12 @@ required = [
   version = "1.6.2"
 
 [[constraint]]
-  name = "github.com/lovoo/goka"
-  branch = "master"
-
-[[constraint]]
   branch = "master"
   name = "golang.org/x/sync"
+
+[[constraint]]
+  name = "github.com/lovoo/goka"
+  branch="bindata-fixed"
 
 [prune]
   go-tests = true
