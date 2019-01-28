@@ -6,10 +6,10 @@
 * clone the repo
 * tasks
   1. Consume events using Sarama
-  1. Track and view state of saxis
+  1. Track and view state of taxis
   1. alert on license fraud
   1. detect fraud
-  1. cell based visualization
+  1. extras (testing, monitoring, visualization of coordinate-cells)
 
 ## Set up your working environment
 
