@@ -1,5 +1,7 @@
 # Godays 2019 - Painless stream processing with Go and Kafka
 
+Slides available [here](https://github.com/frairon/goka-godays2019/blob/master/slides.pdf).
+
 ## Agenda
 * Checkout the [data](https://github.com/frairon/goka-godays2019/blob/master/testdata/README.md)
 * Setup working environment
